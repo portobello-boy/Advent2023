@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"unicode"
 )
+
+var numericStrings = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
+var reversedNumericStrings = []string{"eno", "owt", "eerht", "ruof", "evif", "xis", "neves", "thgie", "enin"}
 
 func reverse(str string) (result string) {
 	for _, v := range str {
@@ -29,21 +33,47 @@ func main() {
 		str := scanner.Text()
 		calibrationValue := [2]int{}
 
+		// First find any numeric character
+		// Second find if any numeric strings exist before that character
+		minNumDigitIndex := 0
+
 		for _, r := range str {
 			if unicode.IsNumber(r) {
 				calibrationValue[0], _ = strconv.Atoi(string(r))
 				break
 			}
+			minNumDigitIndex++
 		}
 
-		for _, r := range reverse(str) {
+		for numValue, num := range numericStrings {
+			idx := strings.Index(str, num)
+			if idx != -1 && idx < minNumDigitIndex {
+				calibrationValue[0] = numValue + 1
+				minNumDigitIndex = idx
+			}
+		}
+
+		// Reset for reversed string
+		minNumDigitIndex = 0
+		reversedStr := reverse(str)
+
+		for _, r := range reversedStr {
 			if unicode.IsNumber(r) {
 				calibrationValue[1], _ = strconv.Atoi(string(r))
 				break
 			}
+			minNumDigitIndex++
 		}
 
-		fmt.Println(calibrationValue)
+		for numValue, num := range reversedNumericStrings {
+			idx := strings.Index(reversedStr, num)
+			if idx != -1 && idx < minNumDigitIndex {
+				calibrationValue[1] = numValue + 1
+				minNumDigitIndex = idx
+			}
+		}
+
+		// fmt.Println(calibrationValue)
 
 		sum += 10*calibrationValue[0] + calibrationValue[1]
 	}
