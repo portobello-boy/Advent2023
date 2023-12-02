@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var configuration = map[string]int{"red": 12, "green": 13, "blue": 14}
+// var configuration = map[string]int{"red": 12, "green": 13, "blue": 14}
 
 func main() {
 	file, err := os.Open("input.txt")
@@ -22,9 +22,8 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		split := strings.Split(scanner.Text(), ":")
-		gameId, _ := strconv.Atoi(strings.Split(split[0], " ")[1])
+		// gameId, _ := strconv.Atoi(strings.Split(split[0], " ")[1])
 		subsets := strings.Split(split[1], ";")
-		// fmt.Println(subsets)
 
 		maxVals := make(map[string]int)
 
@@ -50,16 +49,22 @@ func main() {
 			}
 		}
 
-		valid := true
-		for k, v := range maxVals {
-			if v > configuration[k] {
-				valid = false
-			}
+		prod := 1
+		for _, v := range maxVals {
+			prod *= v
 		}
+		sum += prod
 
-		if valid {
-			sum += gameId
-		}
+		// valid := true
+		// for k, v := range maxVals {
+		// 	if v > configuration[k] {
+		// 		valid = false
+		// 	}
+		// }
+
+		// if valid {
+		// 	sum += gameId
+		// }
 	}
 
 	fmt.Println(sum)
