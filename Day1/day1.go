@@ -9,8 +9,8 @@ import (
 	"unicode"
 )
 
-var numericStrings = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
-var reversedNumericStrings = []string{"eno", "owt", "eerht", "ruof", "evif", "xis", "neves", "thgie", "enin"}
+var numericStrings = [9]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
+var reversedNumericStrings = [9]string{"eno", "owt", "eerht", "ruof", "evif", "xis", "neves", "thgie", "enin"}
 
 func reverse(str string) (result string) {
 	for _, v := range str {
