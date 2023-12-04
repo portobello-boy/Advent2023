@@ -32,8 +32,63 @@ func GetSurroundingSlice(schematic []string, rowIdx, colIdxStart, colIdxEnd int)
 	lastColIdx := int(math.Min(float64(colIdxEnd)+1, float64(len(schematic[rowIdx]))))
 
 	for i := firstRowIdx; i <= lastRowIdx; i++ {
-
 		frame = append(frame, schematic[i][firstColIdx:lastColIdx])
+	}
+
+	return
+}
+
+func GetSurroundingNumbers(schematic []string, rowIdx, colIdx int) (nums []int, numsCount int) {
+	firstRowIdx := int(math.Max(float64(rowIdx)-1, 0))
+	lastRowIdx := int(math.Min(float64(rowIdx)+1, float64(len(schematic))-1))
+
+	firstColIdx := int(math.Max(float64(colIdx)-1, 0))
+	lastColIdx := int(math.Min(float64(colIdx)+1, float64(len(schematic[rowIdx]))))
+
+	// look at surrounding rows
+	for i := firstRowIdx; i <= lastRowIdx; i++ {
+
+		// look at surrounding cols
+		for j := firstColIdx; j <= lastColIdx; j++ {
+			char := rune(schematic[i][j])
+
+			if !unicode.IsNumber(char) {
+				continue
+			}
+
+			startCol, endCol := j, j
+
+			// look backwards to find start of number
+			for {
+				if startCol <= 0 {
+					break
+				}
+				char = rune(schematic[i][startCol-1])
+				if !unicode.IsNumber(char) {
+					break
+				}
+				startCol--
+			}
+
+			// look forwards to find start of number
+			for {
+				j++
+				endCol = j
+				if j >= len(schematic[i]) {
+					break
+				}
+				char = rune(schematic[i][endCol])
+				if !unicode.IsNumber(char) {
+					break
+				}
+			}
+
+			val, _ := strconv.Atoi(schematic[i][startCol:endCol])
+
+			nums = append(nums, val)
+			numsCount = len(nums)
+
+		}
 	}
 
 	return
@@ -60,29 +115,19 @@ func main() {
 		// iterate over cols
 		for colIndex := 0; colIndex < len(row); colIndex++ {
 			char := rune(row[colIndex])
-			// if current rune isn't a number, skip it
-			if !unicode.IsNumber(char) {
+
+			// if the current rune isn't a *, skip it
+			if string(char) != "*" {
 				continue
 			}
 
-			startCol, endCol := colIndex, colIndex
+			nums, numsCount := GetSurroundingNumbers(schematic, rowIndex, colIndex)
 
-			for unicode.IsNumber(char) {
-				endCol++
-				colIndex++
-				if colIndex >= len(row) {
-					break
-				}
-				char = rune(row[colIndex])
+			if numsCount != 2 {
+				continue
 			}
 
-			frame := GetSurroundingSlice(schematic, rowIndex, startCol, endCol)
-
-			if IsFrameValid(frame) {
-				val, _ := strconv.Atoi(schematic[rowIndex][startCol:endCol])
-
-				sum += val
-			}
+			sum += nums[0] * nums[1]
 		}
 	}
 
