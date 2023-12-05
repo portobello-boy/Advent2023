@@ -25,7 +25,6 @@ func main() {
 	}
 	defer file.Close()
 
-	// maps := make(map[string]map[int]int)
 	maps := make(map[string][]func(int) int)
 	mapOrder := make([]string, 0)
 
@@ -56,48 +55,44 @@ func main() {
 				scanner.Scan()
 
 				mapDetailsSlice := StringSliceToIntSlice(strings.Split(mapDetails, " "))
-				// for i := 0; i < mapDetailsSlice[2]; i++ {
-				// 	maps[mapName][mapDetailsSlice[1]+i] = mapDetailsSlice[0] + i
-				// }
+
 				maps[mapName] = append(maps[mapName], func(a int) int {
 					destStart := mapDetailsSlice[0]
 					sourceStart := mapDetailsSlice[1]
 					rangeLength := mapDetailsSlice[2]
 
-					if !(a-sourceStart > 0 && a-(sourceStart+rangeLength) < 0) {
+					if !(a >= sourceStart && a < (sourceStart+rangeLength)) {
 						return a
 					}
 					return destStart + (a - sourceStart)
 				})
-				// fmt.Println(mapDetailsSlice)
-
 			}
 		}
 	}
-	// fmt.Printf("%v\n", maps)
 
 	minValue := -1
-	for _, seed := range seedSlice {
-		finalValue := seed
-		// for _, seedMapping := range maps {
-		for _, seedMapping := range mapOrder {
-			for _, function := range maps[seedMapping] {
-				if tmpVal := function(finalValue); tmpVal != finalValue {
-					finalValue = tmpVal
-					break
+
+	for s := 0; s < len(seedSlice); s += 2 {
+		for i := 0; i < seedSlice[s+1]; i++ {
+			seed := seedSlice[s] + i
+			finalValue := seed
+			for _, seedMapping := range mapOrder {
+				// fmt.Printf("Checking %s for finalValue %d...\n", seedMapping, finalValue)
+
+				for _, function := range maps[seedMapping] {
+					if tmpVal := function(finalValue); tmpVal != finalValue {
+						// fmt.Printf("%s: %d -> %d\n", seedMapping, finalValue, tmpVal)
+						finalValue = tmpVal
+						break
+					}
 				}
 			}
-			// if mapping, ok := maps[seedMapping][finalValue]; ok {
-			// 	// fmt.Printf("%s: %d -> %d\n", seedMapping, finalValue, mapping)
-			// 	finalValue = mapping
-			// }
-		}
-		fmt.Println(seed, finalValue)
 
-		if minValue == -1 {
-			minValue = finalValue
+			if minValue == -1 {
+				minValue = finalValue
+			}
+			minValue = int(math.Min(float64(minValue), float64(finalValue)))
 		}
-		minValue = int(math.Min(float64(minValue), float64(finalValue)))
 	}
 
 	fmt.Println("MIN VALUE", minValue)
