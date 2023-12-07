@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var cards = []string{"A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"}
+var cards = []string{"A", "K", "Q", "T", "9", "8", "7", "6", "5", "4", "3", "2", "J"}
 
 func StringSliceToIntSlice(stringSlice []string) (intSlice []int) {
 	for _, str := range stringSlice {
@@ -43,8 +43,6 @@ func SortHand(a, b string) bool {
 		idx++
 	}
 
-	fmt.Println(idx, string(a[idx]), string(b[idx]))
-
 	for i, c := range cards {
 		if string(a[idx]) == c {
 			idxA = i
@@ -59,10 +57,6 @@ func SortHand(a, b string) bool {
 		}
 	}
 
-	fmt.Println(a, b)
-
-	fmt.Println(idxA, idxB)
-
 	return idxA > idxB
 }
 
@@ -70,6 +64,42 @@ func DetermineType(hand string) int {
 	handMap := make(map[string]int)
 
 	for _, c := range hand {
+		card := string(c)
+		if _, ok := handMap[card]; !ok {
+			handMap[card] = 0
+		}
+		handMap[card]++
+	}
+
+	highestType := ""
+
+	if _, ok := handMap["J"]; ok {
+		highestOtherCount := 0
+		highestOtherLetter := "J"
+		for k, v := range handMap {
+			if v > highestOtherCount && k != "J" {
+				highestOtherCount = v
+				highestOtherLetter = k
+			}
+		}
+
+		highestType = highestOtherLetter
+	}
+
+	newHand := ""
+	for _, c := range hand {
+		if string(c) == "J" {
+			newHand += highestType
+		} else {
+			newHand += string(c)
+		}
+	}
+
+	for k := range handMap {
+		delete(handMap, k)
+	}
+
+	for _, c := range newHand {
 		card := string(c)
 		if _, ok := handMap[card]; !ok {
 			handMap[card] = 0
@@ -120,7 +150,6 @@ func main() {
 	}
 	defer file.Close()
 
-	hands := make([]string, 0)
 	// bids := make([]int, 0)
 	// handInfoMap := make(map[string][]int)
 	handBidMap := make(map[string]int)
@@ -134,8 +163,6 @@ func main() {
 		hand := split[0]
 		bid, _ := strconv.Atoi(split[1])
 
-		hands = append(hands, hand)
-
 		handType := DetermineType(hand)
 
 		handBidMap[hand] = bid
@@ -144,21 +171,7 @@ func main() {
 			handTypeMap[handType] = make([]string, 0)
 		}
 		handTypeMap[handType] = append(handTypeMap[handType], hand)
-
-		// hands = append(hands, hand)
-		// bids = append(bids, bid)
-
-		// handInfoMap[hand] = []int{idx, handType}
-		// idx++
 	}
-
-	// fmt.Println(hands)
-	// sort.Slice(hands, func(i, j int) bool {
-	// 	return SortHand(hands[i], hands[j])
-	// })
-	// fmt.Println(hands)
-
-	fmt.Println(handTypeMap)
 
 	// Sort hands within map
 	for _, hands := range handTypeMap {
@@ -167,15 +180,11 @@ func main() {
 		})
 	}
 
-	fmt.Println(handTypeMap)
-
 	score := 0
 	rank := 1
 	for i := 1; i <= 7; i++ {
 		if hands, ok := handTypeMap[i]; ok {
 			for _, h := range hands {
-				fmt.Printf("Adding to score %d: %d * %d\n", score, rank, handBidMap[h])
-
 				score += rank * handBidMap[h]
 				rank++
 			}
