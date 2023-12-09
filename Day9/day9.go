@@ -39,8 +39,6 @@ func main() {
 	for scanner.Scan() {
 		differenceHistory := make([][]int, 1)
 		ints := StringSliceToIntSlice(strings.Split(scanner.Text(), " "))
-		intsLen := len(ints)
-		// fmt.Println(ints)
 
 		differenceHistory[0] = ints
 
@@ -57,14 +55,12 @@ func main() {
 			curSlice = differences
 		}
 
-		fmt.Println(differenceHistory)
-
 		nextVal := 0
-		for i, differences := range differenceHistory {
-			nextVal += differences[intsLen-i-1]
-		}
 
-		fmt.Println(nextVal)
+		for i := len(differenceHistory) - 2; i >= 0; i-- {
+			nextVal = differenceHistory[i][0] - nextVal
+
+		}
 		sum += nextVal
 
 	}
