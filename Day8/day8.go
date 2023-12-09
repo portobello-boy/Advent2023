@@ -8,11 +8,6 @@ import (
 	"strings"
 )
 
-// type Node struct {
-// 	Left  *Node
-// 	Right *Node
-// }
-
 func StringSliceToIntSlice(stringSlice []string) (intSlice []int) {
 	for _, str := range stringSlice {
 		val, _ := strconv.Atoi(str)
