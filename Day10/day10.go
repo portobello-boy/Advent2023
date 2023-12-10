@@ -18,12 +18,12 @@ type QueueObject struct {
 }
 
 var directionMap = map[string][]Position{
-	"|": []Position{Position{0, -1}, Position{0, 1}},
-	"-": []Position{Position{-1, 0}, Position{1, 0}},
-	"L": []Position{Position{0, -1}, Position{1, 0}},
-	"J": []Position{Position{0, -1}, Position{-1, 0}},
-	"7": []Position{Position{0, 1}, Position{-1, 0}},
-	"F": []Position{Position{0, 1}, Position{1, 0}},
+	"|": {Position{0, -1}, Position{0, 1}},
+	"-": {Position{-1, 0}, Position{1, 0}},
+	"L": {Position{0, -1}, Position{1, 0}},
+	"J": {Position{0, -1}, Position{-1, 0}},
+	"7": {Position{0, 1}, Position{-1, 0}},
+	"F": {Position{0, 1}, Position{1, 0}},
 }
 
 func StringSliceToIntSlice(stringSlice []string) (intSlice []int) {
@@ -75,6 +75,55 @@ func GetSurroundingPipes(grid []string, gridLen, gridWidth int, cur Position) (n
 	return
 }
 
+func DetermineStartPipe(grid []string, gridLen, gridWidth int, start Position) (str string) {
+	// Since we don't know the pipe under S, check all neighbors and find which are valid
+	if string(grid[start.Y][start.X]) != "S" {
+		return
+	}
+
+	surroundingPipes := GetSurroundingPipes(grid, gridLen, gridWidth, start)
+
+	for k, v := range directionMap {
+		candidateOne := Position{start.X + v[0].X, start.Y + v[0].Y}
+		candidateTwo := Position{start.X + v[1].X, start.Y + v[1].Y}
+
+		if (candidateOne == surroundingPipes[0] && candidateTwo == surroundingPipes[1]) || (candidateOne == surroundingPipes[1] && candidateTwo == surroundingPipes[0]) {
+			return k
+		}
+	}
+	return
+}
+
+func IsInLoop(char string, idx int, row string) bool {
+	crossings := 0
+	levelWithPipe := 0
+	for _, c := range row[idx:] {
+		switch string(c) {
+		case "|":
+			crossings++
+			levelWithPipe = 0
+		case "F":
+			levelWithPipe = 1
+		case "L":
+			levelWithPipe = -1
+		case "J":
+			if levelWithPipe == 1 {
+				crossings++
+			}
+			levelWithPipe = 0
+		case "7":
+			if levelWithPipe == -1 {
+				crossings++
+
+			}
+			levelWithPipe = 0
+		case ".":
+			levelWithPipe = 0
+		}
+	}
+	return crossings%2 == 1
+}
+
 func main() {
 	file, err := os.Open("input.txt")
 	if err != nil {
@@ -109,15 +158,22 @@ func main() {
 
 	distanceMap := make(map[Position]int)
 	exploredMap := make(map[Position]bool)
+
+	gridWithMainLoop := make([]string, gridLen)
+	rowTemplate := ""
+	for i := 0; i < gridWidth; i++ {
+		rowTemplate += "."
+	}
+	for i := 0; i < gridLen; i++ {
+		gridWithMainLoop[i] = rowTemplate
+	}
+
+	gridWithMainLoop[startCoords.Y] = gridWithMainLoop[startCoords.Y][0:startCoords.X] + DetermineStartPipe(grid, gridLen, gridWidth, startCoords) + gridWithMainLoop[startCoords.Y][startCoords.X+1:]
+
 	// From starting position, recursively follow all pipes until all pipes are exhausted, track position with largest distance
 
 	queue := make([]QueueObject, 1)
 	queue[0] = QueueObject{startCoords, 0}
-
-	// fmt.Println(grid, startCoords, distanceMap, exploredMap, queue)
-	// fmt.Println(startCoords)
-
-	// fmt.Println(GetSurroundingPipes(grid, gridLen, gridWidth, startCoords))
 
 	maxDistance := 0
 
@@ -136,12 +192,36 @@ func main() {
 		}
 
 		for _, n := range neighbors {
+
+			if string(grid[n.Y][n.X]) != "S" {
+				gridWithMainLoop[n.Y] = gridWithMainLoop[n.Y][0:n.X] + string(grid[n.Y][n.X]) + gridWithMainLoop[n.Y][n.X+1:]
+			}
+
 			if explored, ok := exploredMap[n]; !ok || !explored {
 				queue = append(queue, QueueObject{n, cur.DistanceFromStart + 1})
 			}
 		}
 	}
 
+	for _, r := range gridWithMainLoop {
+		fmt.Println(r)
+
+	}
+
 	fmt.Println(maxDistance)
+
+	// Fidn grid with main loop first, then find which points are contained
+	count := 0
+
+	for rowIdx, row := range gridWithMainLoop {
+		for i, c := range row {
+			if string(c) == "." && IsInLoop(string(c), i, row) {
+				fmt.Printf("character %s at row %d col %d is INSIDE of loop\n", string(c), rowIdx, i)
+				count++
+			}
+		}
+	}
+
+	fmt.Println(count)
 
 }
